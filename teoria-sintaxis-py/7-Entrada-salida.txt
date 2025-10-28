@@ -1,0 +1,46 @@
+<<<ENTRADA DE DATOS>>>
+var1 = input("Ingresa tu nombre: ")
+var2 = input("Ingresa tu edad: ")
+print("Hola, " + var1 + "!")
+print("Tienes " + var2 + " años.")
+
+La función input() siempre devuelve una cadena de texto.
+
+edad = int(input("Ingresa tu edad: "))
+if edad >= 18:
+    print("Eres mayor de edad.")
+else:
+    print("Eres menor de edad.")
+
+<<<SALIDA DE DATOS>>>
+print(f"Hola, mi nombre es {nombre} y tengo {edad} años.")
+
+Podemos utilizar la f-string para incrustar variables directamente dentro de una cadena de texto.
+las variables se incrustan dentro de la cadena utilizando llaves {}
+
+<<<SOBRE ARCHIVOS>>>
+    modos de apertura, lectura ("r"), escritura ("w"), anexar ("a")
+    <<<LECTURA>>>
+    debemos abrirlo utilizando la función open() en modo de lectura ("r"). 
+    Luego, podemos leer el contenido del archivo utilizando métodos como read() o readlines().
+
+    archivo = open("datos.txt", "r")
+    contenido = archivo.read()
+    print(contenido)
+    archivo.close()
+
+    <<<ESCRITURA>>>
+    Si el archivo no existe, se creará automáticamente. 
+    Si el archivo ya existe, su contenido se sobrescribirá.
+
+    archivo = open("datos.txt", "w")
+    archivo.write("Hola, mundo!")
+    archivo.close()
+
+    <<<with>>>
+    se abre utilizando la declaración with y se cierra automáticamente, incluso si ocurre una excepción.
+    
+    with open("datos.txt", "r") as archivo:
+    contenido = archivo.read()
+    print(contenido)
+

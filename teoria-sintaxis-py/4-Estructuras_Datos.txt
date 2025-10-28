@@ -1,0 +1,108 @@
+-----------LISTAS-------------(mutables, ordenadas y dinamicas)
+mutable: Se puede editar el contenido
+ordenada: Tiene un indice para acceder
+dinamicas: Puedo tener cualquier tipo de dato
+<<<CREACION Y ACCESO>>>
+
+var = [elemento1, elemento2]
+
+print(var[0]) elemento1
+print(var[1]) elemento2
+
+print(var[-1]) elemento2
+print(var[-2]) elemento1
+
+
+
+<<<METODOS DE LISTAS>>> (nos permiten manipular y modificar los elementos de la lista)
+
+append(elemento): agrega un elemento al final de la lista.
+insert(indice, elemento): inserta un elemento en una posición específica de la lista.
+remove(elemento): elimina la primera aparición de un elemento en la lista.
+pop(indice): elimina y devuelve el elemento en una posición específica de la lista.
+sort(): ordena los elementos de la lista en orden ascendente.
+reverse(): invierte el orden de los elementos en la lista.
+
+
+<<<LISTA DE COMPRESION>>> (Permiten filtrar y transformar los elementos de una lista en una sola línea de código.)
+
+nueva_lista = [expresion for elemento in secuencia if condicion]
+Ejemplo:
+
+numeros = [1, 2, 3, 4, 5]
+cuadrados = [x ** 2 for x in numeros if x % 2 == 0]
+print(cuadrados)  # Imprime [4, 16]
+
+
+
+-----------TUPLAS------------- (inmutables, dinamicas y ordenadas)
+inmutables: no se pueden modificar una vez creadas. No se pueden agregar, eliminar o cambiar elementos.
+Son sobreescribibles, puedo asignar otro valor a la variable y borrar la tupla
+dinamicas: Permiten varios tipos de elementos
+<<<CREACION Y ACCESO>>>
+
+var = (3, 4)
+
+print (var[0]) Imprime 3
+print (var[1]) Imprime 4
+
+<<<METODOS DE TUPLAS>>>
+count(elemento): devuelve el número de veces que aparece un elemento en la tupla. 
+index(elemento): devuelve el índice de la primera aparición de un elemento en la tupla. Opcionalmente, se puede especificar el inicio y fin de la búsqueda. 
+len(tupla): aunque no es un método de tupla propiamente dicho, esta función incorporada devuelve la longitud de la tupla.
+
+
+-----------DICCIONARIOS------------- (mutables, Dinamicas y desordenadas)
+mutable y no ordenada que permite almacenar pares de clave-valor, se separan por comas.
+No aceptan datos duplicados
+Dinamicas
+
+<<<CREACION Y ACCESO>>>
+persona = {"nombre": "Juan", "edad": 25, "ciudad": "Madrid"}
+
+print(persona["nombre"])  # Imprime "Juan"
+print(persona["edad"])    # Imprime 25
+print(persona["ciudad"])  # Imprime "Madrid"
+print(persona.get("nombre")) # Imprime "Juan" o "none" en caso de no existir   
+
+<<<METODOS DE DICCIONARIOS>>>
+keys(): devuelve una vista de todas las claves del diccionario.
+values(): devuelve una vista de todos los valores del diccionario.
+items(): devuelve una vista de todos los pares clave-valor del diccionario.
+update("keys":"values"): actualiza el diccionario con los pares clave-valor.
+
+
+-----------CONJUNTOS(set)------------- (mutables y desordenadas)
+no acepta datos desordenados 
+<<<CREACION Y OPERACIONES>>>
+frutas = {"manzana", "banana", "naranja"}
+numeros = set([1, 2, 3, 4, 5])
+
+Los conjuntos admiten operaciones matemáticas de conjuntos
+
+unión (|)
+intersección (&)
+diferencia (-)
+diferencia simétrica (^).
+
+conjunto1 = {1, 2, 3}
+conjunto2 = {3, 4, 5}
+
+union = conjunto1 | conjunto2
+print(union)  # Imprime {1, 2, 3, 4, 5}
+
+interseccion = conjunto1 & conjunto2
+print(interseccion)  # Imprime {3}
+
+diferencia = conjunto1 - conjunto2
+print(diferencia)  # Imprime {1, 2}
+
+diferencia_simetrica = conjunto1 ^ conjunto2
+print(diferencia_simetrica)  # Imprime {1, 2, 4, 5}
+
+
+<<<METODOS DE CONJUNTOS>>>
+add(elemento): agrega un elemento al conjunto.
+remove(elemento): elimina un elemento del conjunto. Si el elemento no existe, genera un error.
+discard(elemento): elimina un elemento del conjunto si está presente. Si el elemento no existe, no hace nada.
+clear(): elimina todos los elementos del conjunto.
