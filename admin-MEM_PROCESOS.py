@@ -51,10 +51,11 @@ def asignacion_best_fit(proceso, particiones):
 
     else:
         proceso["estado"] = "listo y suspendido"
+        listos_y_suspendidos.append(proceso)
+        listos_y_suspendidos.sort(key=lambda x: int(x["TI"]))
 
     Procesos_residentes = Procesos_residentes + 1 
-    listos.append(proceso)
-    listos.sort(key=lambda x: int(x["TI"]))
+    
 
 
 
@@ -64,7 +65,7 @@ print(tabulate(particiones, headers="keys", tablefmt="heavy_grid"))
 T_global = 0
 
 Procesos_entrantes = [] #Matriz con todos los procesos
-listos = [0] #cola de listos
+listos_y_suspendidos = [0] #cola de listos
 
 
 #===============================================================================================================================
