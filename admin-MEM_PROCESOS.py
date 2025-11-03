@@ -7,7 +7,7 @@ def inicializar_particiones():
     particion_1 = {"PID": 0, "Proceso": " ", "tamaño": 250, "mem": 0, "FI": 0, "TR": 0, "disp": "si"}
     particion_2 = {"PID": 0, "Proceso": " ", "tamaño": 150, "mem": 0, "FI": 0, "TR": 0, "disp": "si"}
     particion_3 = {"PID": 0, "Proceso": " ", "tamaño": 50, "mem": 0, "FI": 0, "TR": 0, "disp": "si"}
-    particion_SO = {"PID": 0, "Proceso": "SO","tamaño": 100,  "mem": 100, "FI": 0, "TR": "--", "disp": "NO"}
+    particion_SO = {"PID": 0, "Proceso": "SO","tamaño": 100,  "mem": 100, "FI": 0, "TR": 0, "disp": "NO"}
 
     particiones_inicial= [particion_1, particion_2, particion_3, particion_SO]
 
@@ -65,7 +65,7 @@ print(tabulate(particiones, headers="keys", tablefmt="heavy_grid"))
 T_global = 0
 
 Procesos_entrantes = [] #Matriz con todos los procesos
-listos_y_suspendidos = [0] #cola de listos
+listos_y_suspendidos = [] #cola de listos
 
 
 #===============================================================================================================================
@@ -82,13 +82,14 @@ except FileNotFoundError:
 
 #=============================CICLO PRINCIPAL===================================================================================
 for i in range(len(Procesos_entrantes)):
-    print("vefificando archivo .csv")
+    print (" ")
 if (i<11):
     if Procesos_entrantes or listos_y_suspendidos:
-        Procesos_residentes = range(len(listos_y_suspendidos))
+        Procesos_residentes = len(listos_y_suspendidos)
         if Procesos_residentes < 5:
             for proc in Procesos_entrantes:
                 asignacion_best_fit(proc, particiones)
+                particiones.sort(key=lambda x: int(x["TR"]))
 
 
 
