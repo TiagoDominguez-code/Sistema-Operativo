@@ -2,6 +2,7 @@ from tabulate import tabulate
 import csv
 import math
 
+
 def inicializar_particiones():
     particion_1 = {"PID": 0, "Proceso": " ", "tamaño": 250, "mem": 0, "FI": 0, "TR": 0, "disp": "si"}
     particion_2 = {"PID": 0, "Proceso": " ", "tamaño": 150, "mem": 0, "FI": 0, "TR": 0, "disp": "si"}
@@ -14,14 +15,19 @@ def inicializar_particiones():
 
 
 def asignacion_best_fit(proceso, particiones):
-    global Procesos_residentes
+    global Procesos_residentes, listos, listos_y_suspendidos
+
     mejor_particion = -1
     FI_min = math.inf 
 
     try:
         mem_proceso = int(proceso["mem"])
+        ti_proceso = int(proceso.get("TI", 0))
     except ValueError:
         print(f"Error: El proceso {proceso['Proceso']} tiene un valor de 'mem' no numérico.")
+        return
+    except KeyError:
+        print(f"Error: El proceso {proceso['Proceso']} no tiene 'mem' o 'TI' en el CSV.")
         return
     
     for i in range(len(particiones)): #i es el indice de cada particion
@@ -42,9 +48,14 @@ def asignacion_best_fit(proceso, particiones):
         p["mem"] = proceso["mem"]
         p["FI"] = FI_min
         p["disp"] = "NO"
-        Procesos_residentes = Procesos_residentes + 1
+
     else:
         proceso["estado"] = "listo y suspendido"
+
+    Procesos_residentes = Procesos_residentes + 1 
+    listos.append(proceso)
+    listos.sort(key=lambda x: int(x["TI"]))
+
 
 
 #=======PROCESO=======================================================================================================================
@@ -53,8 +64,9 @@ print(tabulate(particiones, headers="keys", tablefmt="heavy_grid"))
 T_global = 0
 
 Procesos_entrantes = [] #Matriz con todos los procesos
-mem_principal = [0]*5 #matriz de memoria principal inicializada con 5 espacios en 0
-Procesos_residentes = 0
+listos = [0] #cola de listos
+
+
 #===============================================================================================================================
 
 #===============================================================================================================================
@@ -67,13 +79,21 @@ except FileNotFoundError:
     print ("no se encontro el archivo")
 #===============================================================================================================================
 
+#=============================CICLO PRINCIPAL===================================================================================
+for i in range(len(Procesos_entrantes)):
+    print("vefificando archivo .csv")
+if (i<11):
+    if Procesos_entrantes or listos:
+        Procesos_residentes = range(len(listos))
+        if Procesos_residentes < 5:
+            for proc in Procesos_entrantes:
+                asignacion_best_fit(proc, particiones)
 
-if Procesos_entrantes or mem_principal:
-    if Procesos_residentes < 6:
-        for proc in Procesos_entrantes:
-            asignacion_best_fit(proc, particiones)
 
-    print("\n--- ESTADO FINAL DE LA MEMORIA ---")
-    print(tabulate(particiones, headers="keys", tablefmt="heavy_grid"))
+
+        print("\n--- ESTADO FINAL DE LA MEMORIA ---")
+        print(tabulate(particiones, headers="keys", tablefmt="heavy_grid"))
+    else:
+        print("Archivo 'Procesos.csv' está vacío. No hay nada que asignar")
 else:
-    print("Archivo 'Procesos.csv' está vacío. No hay nada que asignar.")
+    print("El archivo .csv tiene más de 10 procesos")
