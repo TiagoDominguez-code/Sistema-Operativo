@@ -84,8 +84,8 @@ except FileNotFoundError:
 for i in range(len(Procesos_entrantes)):
     print("vefificando archivo .csv")
 if (i<11):
-    if Procesos_entrantes or listos:
-        Procesos_residentes = range(len(listos))
+    if Procesos_entrantes or listos_y_suspendidos:
+        Procesos_residentes = range(len(listos_y_suspendidos))
         if Procesos_residentes < 5:
             for proc in Procesos_entrantes:
                 asignacion_best_fit(proc, particiones)
