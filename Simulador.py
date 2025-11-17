@@ -187,9 +187,12 @@ def imprimir_evento(tiempo_actual, procesos, particiones, titulo):
     for p in procesos:
         tabla.append([p.id, p.Proceso, p.estado, p.tam, p.restante, p.en_memoria, p.particion])
     print(tabulate(tabla, headers=["ID", "Nombre", "Estado", "Tamaño", "Restante", "En Memoria", "Partición"]))
+
+    
     tabla_part = []
     for part in particiones:
         tabla_part.append([part.id, part.inicio, part.tam, part.libre, part.proceso, part.frag])
+    print("\n--- Estado de Memoria Principal ---")
     print(tabulate(tabla_part, headers=["Partición", "Inicio", "Tamaño", "Libre", "Proceso", "Frag"]))
 
 def todos_finalizados(procesos):
@@ -199,7 +202,7 @@ def todos_finalizados(procesos):
 def esperar_entrada(auto_run):
     if auto_run:
         return True, False
-    print("\n[Enter] siguiente | a+Enter auto | q+Enter salir")
+    print("\n[Enter] siguiente | a + Enter automatico | q + Enter salir")
     tecla = input().strip().lower()
     if tecla == "a":
         return True, False
@@ -241,8 +244,7 @@ def simular(procesos, particiones, tiempo_max=1000):
                 liberar_particion(candidato, particiones)
                 proceso_en_ejecucion = None
                 traer_suspendidos_si_cabe(procesos)
-                imprimir_evento(tiempo_actual + 1, procesos, particiones, "Finalización y reubicación")
-        
+                
         # Mostrar estado al inicio del tick
         imprimir_evento(tiempo_actual, procesos, particiones, "Estado al inicio del tick")
 
@@ -253,6 +255,12 @@ def simular(procesos, particiones, tiempo_max=1000):
 
         # Avanzar tiempo al final
         tiempo_actual += 1
+
+    print("\n=== Simulación finalizada ===")
+    tabla_fin = []
+    for p in procesos:
+        tabla_fin.append([p.id, p.Proceso, p.irrupcion, p.t_espera, p.t_retorno, p.t_inicio, p.t_fin, p.estado])
+    print(tabulate(tabla_fin, headers=["ID", "Nombre", "CPU", "Espera", "Retorno", "Inicio", "Fin", "Estado"]))
 
 # Ejecutar simulación
 if procesos:
