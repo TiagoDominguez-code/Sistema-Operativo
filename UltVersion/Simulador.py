@@ -81,14 +81,14 @@ def asignacion_best_fit(proceso, particiones):
         return False
     
 cola_prioridad = []  # Cola única para Listo y Listo-Suspendido
-multiprogramacion = 5
+multiprogramacion = 4 #el ID arranca en 0, 0 hasta 4
 
 for proceso in procesos:
     if proceso.arribo == 0 and proceso.estado == "Nuevo":
         # Contar procesos activos en memoria
         activos_en_memoria = [p for p in procesos if p.en_memoria]
         suspendidos_actuales = [p for p in procesos if p.estado == "Listo-Suspendido"]
-
+       
         if len(activos_en_memoria) + len(suspendidos_actuales) <= multiprogramacion:
             asignacion_best_fit(proceso, particiones)
         else:
@@ -102,6 +102,60 @@ for proceso in procesos:
 # Ordenar la cola por tiempo restante
 cola_prioridad.sort(key=lambda p: p.restante)
 
+#Bloque de swap_in_out 
+def swap_in_out(cola_prioridad, particiones):
+    # Ordenar siempre por tiempo restante
+    cola_prioridad.sort(key=lambda p: p.restante)
+
+    # Proceso candidato (el más corto)
+    candidato = cola_prioridad[0]
+
+    if candidato.estado == "Listo":
+        # Ya está en memoria, se ejecuta directamente
+        return candidato
+
+    elif candidato.estado == "Listo-Suspendido":
+        # Intentar traerlo a memoria
+        if asignacion_best_fit(candidato, particiones):
+            # Swap in exitoso
+            candidato.estado = "Listo"
+            return candidato
+        else:
+            # Si no cabe, buscar un proceso en memoria para swap out
+            en_memoria = [p for p in cola_prioridad if p.en_memoria]
+
+            if en_memoria:
+                # Elegir el proceso más largo en memoria para sacar
+                proceso_out = max(en_memoria, key=lambda p: p.restante)
+
+                # Liberar su partición
+                for particion in particiones:
+                    if particion.id == proceso_out.particion:
+                        particion.libre = True
+                        particion.proceso = None
+                        particion.frag = 0
+
+                proceso_out.en_memoria = False
+                proceso_out.particion = None
+                proceso_out.estado = "Listo-Suspendido"
+
+                # Intentar asignar memoria al candidato
+                if asignacion_best_fit(candidato, particiones):
+                    candidato.estado = "Listo"
+                    return candidato
+                else:
+                    # Si aún no cabe, se mantiene suspendido
+                    return proceso_out
+    else:
+        # Si está en estado Nuevo, no se ejecuta todavía
+        return None
+    
+proceso_ejecutar = swap_in_out(cola_prioridad, particiones)
+
+if proceso_ejecutar:
+    print(f"Ejecutando: {proceso_ejecutar.Proceso} (ID {proceso_ejecutar.id})")
+else:
+    print("No hay proceso para ejecutar en este ciclo")
 
 
 tabla = []
