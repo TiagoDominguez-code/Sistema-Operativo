@@ -1,6 +1,8 @@
 id,Proceso,tam,arribo,irrupcion,estado
-1,lol.exe,50,0,25,nuevo
-2,python.exe,150,1,5,nuevo
-3,python.exe,250,0,25,nuevo
-4,python.exe,250,0,15,nuevo
-5,python.exe.,250,0,25,nuevo
+1,lol.exe,50,0,3,nuevo
+2,python.exe,150,0,5,nuevo
+3,python.exe,250,0,6,nuevo
+4,python.exe,250,4,9,nuevo
+5,python.exe,250,6,12,nuevo
+6,python.exe,25,8,15,nuevo
+7,python.exe,25,9,5,nuevo
