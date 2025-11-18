@@ -180,20 +180,47 @@ def traer_suspendidos_si_cabe(procesos):
         if asignacion_best_fit(s, particiones):
             break  # traer uno por vez
 
-def imprimir_evento(tiempo_actual, procesos, particiones, titulo):
-    print(f"\n=== {titulo} (t={tiempo_actual}) ===")
-    actualizar_cola_prioridad(procesos)
+def imprimir_evento(tiempo_actual, procesos, particiones, titulo, proceso_en_ejecucion=None):
+    print(f"\n=== Tiempo {tiempo_actual} ===")
+
+    # Tabla general de procesos
     tabla = []
     for p in procesos:
         tabla.append([p.id, p.Proceso, p.estado, p.tam, p.restante, p.en_memoria, p.particion])
     print(tabulate(tabla, headers=["ID", "Nombre", "Estado", "Tamaño", "Restante", "En Memoria", "Partición"]))
 
-    
+    # Mostrar colas
+    en_memoria, suspendidos = activos(procesos)
+
+    print("\n--- Cola de Listos ---")
+    if en_memoria:
+        for p in en_memoria:
+            print(f"ID {p.id} → {p.Proceso}")
+    else:
+        print("Vacía")
+
+    print("\n--- Cola de Listos-Suspendidos ---")
+    if suspendidos:
+        for p in suspendidos:
+            print(f"ID {p.id} → {p.Proceso}")
+    else:
+        print("Vacía")
+
+    # Mostrar proceso en ejecución
+    print("\n--- Proceso en ejecución ---")
+    if proceso_en_ejecucion:
+        print(f"ID {proceso_en_ejecucion.id} → {proceso_en_ejecucion.Proceso} "
+              f"(Restante={proceso_en_ejecucion.restante}, Partición={proceso_en_ejecucion.particion})")
+    else:
+        print("Ninguno")
+
+    # Tabla de memoria principal
     tabla_part = []
     for part in particiones:
         tabla_part.append([part.id, part.inicio, part.tam, part.libre, part.proceso, part.frag])
     print("\n--- Estado de Memoria Principal ---")
     print(tabulate(tabla_part, headers=["Partición", "Inicio", "Tamaño", "Libre", "Proceso", "Frag"]))
+
 
 def todos_finalizados(procesos):
     return all(p.estado == "Finalizado" for p in procesos)
@@ -213,13 +240,23 @@ def esperar_entrada(auto_run):
 def simular(procesos, particiones, tiempo_max=1000):
     tiempo_actual = 0
     proceso_en_ejecucion = None
+    ultimo_ejecucion_id = None  # para detectar cambios de CPU
     auto_run = False
     salir = False
 
     while not todos_finalizados(procesos) and tiempo_actual <= tiempo_max and not salir:
+        evento_titulo = None
 
-        # Admitir procesos que arriban en este tick
+        # Snapshot antes de admitir
+        estado_antes = [(p.id, p.estado, p.en_memoria, p.particion) for p in procesos]
         admitir_nuevos(procesos, tiempo_actual)
+        estado_despues = [(p.id, p.estado, p.en_memoria, p.particion) for p in procesos]
+
+        # Detectar ingreso a memoria
+        for (id0, est0, mem0, part0), (id1, est1, mem1, part1) in zip(estado_antes, estado_despues):
+            if id0 == id1 and est0 == "Nuevo" and est1 == "Listo" and mem1 and part1 is not None:
+                evento_titulo = f"Ingreso a memoria del proceso {id1}"
+                break
 
         # Elegir proceso a ejecutar
         candidato = swap_in_out(procesos, proceso_en_ejecucion)
@@ -228,7 +265,12 @@ def simular(procesos, particiones, tiempo_max=1000):
             if candidato.t_inicio is None:
                 candidato.t_inicio = tiempo_actual
 
+            # Detectar cambio de CPU
+            if ultimo_ejecucion_id != candidato.id:
+                evento_titulo = evento_titulo or f"Cambio de CPU: entra {candidato.id}"
+
             proceso_en_ejecucion = candidato
+            ultimo_ejecucion_id = candidato.id
             candidato.restante -= 1
 
             # Actualizar espera de otros
@@ -242,25 +284,67 @@ def simular(procesos, particiones, tiempo_max=1000):
                 candidato.t_retorno = candidato.t_fin - candidato.arribo
                 candidato.estado = "Finalizado"
                 liberar_particion(candidato, particiones)
-                proceso_en_ejecucion = None
+
+                # Traer suspendidos
                 traer_suspendidos_si_cabe(procesos)
-                
-        # Mostrar estado al inicio del tick
-        imprimir_evento(tiempo_actual, procesos, particiones, "Estado al inicio del tick")
 
-        # Control paso a paso
-        auto_run, salir = esperar_entrada(auto_run)
-        if salir:
-            break
+                # Nuevo candidato en el mismo tick
+                nuevo_candidato = swap_in_out(procesos, None)
+                proceso_en_ejecucion = nuevo_candidato
+                ultimo_ejecucion_id = nuevo_candidato.id if nuevo_candidato else None
 
-        # Avanzar tiempo al final
+                if nuevo_candidato:
+                    evento_titulo = evento_titulo or f"Cambio de CPU tras finalización: entra {nuevo_candidato.id}"
+
+                # Detectar intercambio de colas
+                estado_swap_despues = [(p.id, p.estado, p.en_memoria, p.particion) for p in procesos]
+                for (idA, estA, memA, partA), (idB, estB, memB, partB) in zip(estado_despues, estado_swap_despues):
+                    if idA == idB and ((estA == "Listo" and estB == "Listo-Suspendido") or (estA == "Listo-Suspendido" and estB == "Listo")):
+                        evento_titulo = f"Intercambio de colas: {idB} {estA}→{estB}"
+                        break
+
+        else:
+            proceso_en_ejecucion = None
+            ultimo_ejecucion_id = None
+
+        # SOLO imprimir y esperar entrada si hubo evento
+        if evento_titulo:
+            imprimir_evento(tiempo_actual, procesos, particiones, evento_titulo, proceso_en_ejecucion)
+            auto_run, salir = esperar_entrada(auto_run)
+            if salir:
+                break
+
+        # Avanzar tiempo siempre
         tiempo_actual += 1
 
+    # Fin de simulación
     print("\n=== Simulación finalizada ===")
     tabla_fin = []
+    total_espera = 0
+    total_retorno = 0
+    total_cpu = 0
+    n = len(procesos)
+
     for p in procesos:
         tabla_fin.append([p.id, p.Proceso, p.irrupcion, p.t_espera, p.t_retorno, p.t_inicio, p.t_fin, p.estado])
+        total_espera += p.t_espera
+        total_retorno += p.t_retorno
+        total_cpu += p.irrupcion
+
     print(tabulate(tabla_fin, headers=["ID", "Nombre", "CPU", "Espera", "Retorno", "Inicio", "Fin", "Estado"]))
+
+    # Calcular promedios
+    prom_espera = total_espera / n if n > 0 else 0
+    prom_retorno = total_retorno / n if n > 0 else 0
+
+    # Rendimiento de CPU
+    cpu_utilizacion = (total_cpu / tiempo_actual) * 100 if tiempo_actual > 0 else 0
+
+    print("\n--- Resultados globales ---")
+    print(f"Tiempo promedio de espera: {prom_espera:.2f}")
+    print(f"Tiempo promedio de retorno: {prom_retorno:.2f}")
+    print(f"Rendimiento de la CPU: {cpu_utilizacion:.2f}%")
+
 
 # Ejecutar simulación
 if procesos:
