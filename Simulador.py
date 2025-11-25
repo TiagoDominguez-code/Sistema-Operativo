@@ -105,6 +105,13 @@ def admitir_nuevos(procesos, tiempo_actual):
     # Admitir procesos que arriban en este tick
     llegados = [p for p in procesos if p.arribo <= tiempo_actual and p.estado == "Nuevo"]
     for p in llegados:
+        # 🚫 Controlar tamaño máximo
+        if p.tam > 250:
+            p.estado = "No procesado"
+            p.en_memoria = False
+            p.particion = None
+            continue
+
         en_memoria, suspendidos = activos(procesos)
         activos_count = len(en_memoria) + len(suspendidos)
         if activos_count >= multiprogramacion_max:
@@ -326,18 +333,21 @@ def simular(procesos, particiones, tiempo_max=1000):
     n = len(procesos)
 
     for p in procesos:
-        tabla_fin.append([p.id, p.Proceso, p.irrupcion, p.t_espera, p.t_retorno, p.t_inicio, p.t_fin, p.estado])
-        total_espera += p.t_espera
-        total_retorno += p.t_retorno
-        total_cpu += p.irrupcion
+        if p.estado == "No procesado":
+            tabla_fin.append([p.id, p.Proceso, p.irrupcion, "-", "-", "-", "-", "No procesado"])
+        else:
+            tabla_fin.append([p.id, p.Proceso, p.irrupcion, p.t_espera, p.t_retorno, p.t_inicio, p.t_fin, p.estado])
+            total_espera += p.t_espera
+            total_retorno += p.t_retorno
+            total_cpu += p.irrupcion
 
     print(tabulate(tabla_fin, headers=["ID", "Nombre", "CPU", "Espera", "Retorno", "Inicio", "Fin", "Estado"]))
 
-    # Calcular promedios
-    prom_espera = total_espera / n if n > 0 else 0
-    prom_retorno = total_retorno / n if n > 0 else 0
-
-    # Rendimiento de CPU
+    # Calcular promedios solo sobre los procesados
+    procesados = [p for p in procesos if p.estado != "No procesado"]
+    n_proc = len(procesados)
+    prom_espera = total_espera / n_proc if n_proc > 0 else 0
+    prom_retorno = total_retorno / n_proc if n_proc > 0 else 0
     cpu_utilizacion = (total_cpu / tiempo_actual) * 100 if tiempo_actual > 0 else 0
 
     print("\n--- Resultados globales ---")
@@ -351,3 +361,7 @@ if procesos:
     simular(procesos, particiones, tiempo_max=500)
 else:
     print("No hay procesos para simular.")
+
+# Mantener la ventana abierta al terminar
+input("\nSimulación finalizada. Presiona Enter para cerrar...")
+
