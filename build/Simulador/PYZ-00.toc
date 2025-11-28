@@ -1,4 +1,4 @@
-('G:\\Tiago\\SO-Proyecto\\Sistema-Operativo\\build\\Simulador\\PYZ-00.pyz',
+('G:\\Tiago\\SO-Proyecto\\nuevo\\sistema-operativo\\build\\Simulador\\PYZ-00.pyz',
  [('__future__',
    'C:\\Users\\Tiago\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\__future__.py',
    'PYMODULE'),

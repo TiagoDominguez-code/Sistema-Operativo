@@ -1,5 +1,6 @@
 import csv
 from tabulate import tabulate
+import os
 
 class Proceso:
     def __init__(self, id, Proceso, tam, arribo, irrupcion):
@@ -34,12 +35,34 @@ particiones = [
 ]
 
 # Cargar CSV
+# Mostrar opciones de Prueba
+print("Seleccione un Set de Prueba:")
+lotes_disponibles = [f for f in os.listdir() if f.lower().endswith(".csv")]
+if not lotes_disponibles:
+    print("No se encontraron archivos de prueba.")
+    exit()
+
+for i, nombre in enumerate(lotes_disponibles, start=1):
+    print(f"{i}. {nombre}")
+
+# Validar selección del usuario
+archivo_lote = None
+while True:
+    opcion = input("Ingrese el número del Set a usar: ").strip()
+    if opcion.isdigit():
+        indice = int(opcion) - 1
+        if 0 <= indice < len(lotes_disponibles):
+            archivo_lote = lotes_disponibles[indice]
+            break
+    print("❌ Selección inválida. Ingrese un número válido de la lista.")
+
+# Cargar CSV seleccionado
 try:
-    with open("Procesos2.csv", "r", encoding="utf-8") as archivo_csv:
+    with open(archivo_lote, "r", encoding="utf-8") as archivo_csv:
         reader = csv.DictReader(archivo_csv)
         Procesos_nuevos = list(reader)
 except FileNotFoundError:
-    print("no se encontro el archivo")
+    print("No se encontró el archivo seleccionado.")
     Procesos_nuevos = []
 
 # Convertir a objetos
@@ -57,7 +80,7 @@ for fila in Procesos_nuevos:
 # Parámetros del sistema
 multiprogramacion_max = 5  # activos = en memoria (Listo) + suspendidos
 max_en_memoria = 3         # por particiones de usuario
-cola_prioridad = []        # Listo + Listo-Suspendido (visualización y orden por restante)
+cola_prioridad = []        # Listo + Listo-Suspendido
 
 def asignacion_best_fit(proceso, particiones):
     mejor_particion = None
@@ -102,10 +125,10 @@ def activos(procesos):
     return en_memoria, suspendidos
 
 def admitir_nuevos(procesos, tiempo_actual):
-    # Admitir procesos que arriban en este tick
+    # Admitir procesos que arriban en este tiempo
     llegados = [p for p in procesos if p.arribo <= tiempo_actual and p.estado == "Nuevo"]
     for p in llegados:
-        # 🚫 Controlar tamaño máximo
+        #Controlar tamaño máximo de los procesos
         if p.tam > 250:
             p.estado = "No procesado"
             p.en_memoria = False
@@ -179,23 +202,17 @@ def swap_in_out(procesos, proceso_en_ejecucion=None):
 
 
 def traer_suspendidos_si_cabe(procesos):
-    # Al liberar partición, priorizar suspendidos que quepan (por restante)
+    # Al liberar partición, priorizar suspendidos que quepan y por T restante
     _, suspendidos = activos(procesos)
     if not suspendidos:
         return
     suspendidos_ordenados = sorted(suspendidos, key=lambda p: p.restante)
     for s in suspendidos_ordenados:
         if asignacion_best_fit(s, particiones):
-            break  # traer uno por vez
+            break
 
 def imprimir_evento(tiempo_actual, procesos, particiones, titulo, proceso_en_ejecucion=None):
     print(f"\n=== Tiempo {tiempo_actual} ===")
-
-    # Tabla general de procesos
-    tabla = []
-    for p in procesos:
-        tabla.append([p.id, p.Proceso, p.estado, p.tam, p.restante, p.en_memoria, p.particion])
-    print(tabulate(tabla, headers=["ID", "Nombre", "Estado", "Tamaño", "Restante", "En Memoria", "Partición"]))
 
     # Mostrar colas
     en_memoria, suspendidos = activos(procesos)
@@ -209,7 +226,7 @@ def imprimir_evento(tiempo_actual, procesos, particiones, titulo, proceso_en_eje
             if proceso_en_ejecucion is None or p.id != proceso_en_ejecucion.id:
                 listos_para_mostrar.append(p)
 
-    # Ahora imprimimos esa lista filtrada
+    # imprimir esa lista filtrada
     if listos_para_mostrar:
         for p in listos_para_mostrar:
             print(f"ID {p.id} → {p.Proceso} (Restante: {p.restante})")
@@ -264,7 +281,7 @@ def simular(procesos, particiones, tiempo_max=1000):
     while not todos_finalizados(procesos) and tiempo_actual <= tiempo_max and not salir:
         evento_titulo = None
 
-        # Snapshot antes de admitir
+        # control antes de admitir
         estado_antes = [(p.id, p.estado, p.en_memoria, p.particion) for p in procesos]
         admitir_nuevos(procesos, tiempo_actual)
         estado_despues = [(p.id, p.estado, p.en_memoria, p.particion) for p in procesos]
@@ -309,7 +326,7 @@ def simular(procesos, particiones, tiempo_max=1000):
                 # volvemos a llamar a admisión para llenar el hueco INMEDIATAMENTE.
                 admitir_nuevos(procesos, tiempo_actual)
 
-                # Nuevo candidato en el mismo tick
+                # Nuevo candidato en el mismo tiempo
                 nuevo_candidato = swap_in_out(procesos, None)
                 proceso_en_ejecucion = nuevo_candidato
                 ultimo_ejecucion_id = nuevo_candidato.id if nuevo_candidato else None
@@ -335,7 +352,7 @@ def simular(procesos, particiones, tiempo_max=1000):
             if salir:
                 break
 
-        # Avanzar tiempo siempre
+        # Avanzar tiempo simulador
         tiempo_actual += 1
 
     # Fin de simulación
