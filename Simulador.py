@@ -35,7 +35,7 @@ particiones = [
 
 # Cargar CSV
 try:
-    with open("Procesos.csv", "r", encoding="utf-8") as archivo_csv:
+    with open("Procesos2.csv", "r", encoding="utf-8") as archivo_csv:
         reader = csv.DictReader(archivo_csv)
         Procesos_nuevos = list(reader)
 except FileNotFoundError:
@@ -97,8 +97,8 @@ def liberar_particion(proceso, particiones):
     proceso.particion = None
 
 def activos(procesos):
-    en_memoria = [p for p in procesos if p.estado == "Listo" and p.en_memoria]
-    suspendidos = [p for p in procesos if p.estado == "Listo-Suspendido" and not p.en_memoria]
+    en_memoria = [p for p in procesos if p.estado == "Listo"]
+    suspendidos = [p for p in procesos if p.estado == "Listo-Suspendido"]
     return en_memoria, suspendidos
 
 def admitir_nuevos(procesos, tiempo_actual):
@@ -114,6 +114,7 @@ def admitir_nuevos(procesos, tiempo_actual):
 
         en_memoria, suspendidos = activos(procesos)
         activos_count = len(en_memoria) + len(suspendidos)
+        
         if activos_count >= multiprogramacion_max:
             continue  # límite alcanzado, permanece en Nuevo
 
@@ -200,9 +201,18 @@ def imprimir_evento(tiempo_actual, procesos, particiones, titulo, proceso_en_eje
     en_memoria, suspendidos = activos(procesos)
 
     print("\n--- Cola de Listos ---")
+    # Creamos una lista filtrada que excluye al proceso que está en CPU
+    listos_para_mostrar = []
     if en_memoria:
         for p in en_memoria:
-            print(f"ID {p.id} → {p.Proceso}")
+            # Solo lo agregamos si NO es el proceso en ejecución
+            if proceso_en_ejecucion is None or p.id != proceso_en_ejecucion.id:
+                listos_para_mostrar.append(p)
+
+    # Ahora imprimimos esa lista filtrada
+    if listos_para_mostrar:
+        for p in listos_para_mostrar:
+            print(f"ID {p.id} → {p.Proceso} (Restante: {p.restante})")
     else:
         print("Vacía")
 
@@ -294,6 +304,10 @@ def simular(procesos, particiones, tiempo_max=1000):
 
                 # Traer suspendidos
                 traer_suspendidos_si_cabe(procesos)
+                
+                # si se libera un lugar en el grado de multiprogramación,
+                # volvemos a llamar a admisión para llenar el hueco INMEDIATAMENTE.
+                admitir_nuevos(procesos, tiempo_actual)
 
                 # Nuevo candidato en el mismo tick
                 nuevo_candidato = swap_in_out(procesos, None)
@@ -359,6 +373,7 @@ def simular(procesos, particiones, tiempo_max=1000):
 # Ejecutar simulación
 if procesos:
     simular(procesos, particiones, tiempo_max=500)
+
 else:
     print("No hay procesos para simular.")
 
