@@ -1,0 +1,11 @@
+id,proceso,tam,arribo,irrupcion,estado
+1,E1,52,0,18,nuevo
+2,E2,58,1,4,nuevo
+3,E3,59,2,20,nuevo
+4,E4,60,3,7,nuevo
+5,E5,151,4,12,nuevo
+6,E6,155,5,22,nuevo
+7,E7,158,6,9,nuevo
+8,E8,160,7,6,nuevo
+9,E9,100,8,14,nuevo
+10,E10,248,9,5,nuevo
