@@ -1,4 +1,4 @@
-id,proceso,tam,arribo,irrupcion,estado
+id,Proceso,tam,arribo,irrupcion,estado
 1,E1,52,0,18,nuevo
 2,E2,58,1,4,nuevo
 3,E3,59,2,20,nuevo
