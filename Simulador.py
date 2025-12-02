@@ -307,15 +307,11 @@ def simular(procesos, particiones, tiempo_max=1000):
             ultimo_ejecucion_id = candidato.id
             candidato.restante -= 1
 
-            # Actualizar espera de otros
-            for p in procesos:
-                if p != candidato and p.estado == "Listo" and p.en_memoria:
-                    p.t_espera += 1
-
             # Finalización
             if candidato.restante == 0:
                 candidato.t_fin = tiempo_actual + 1
                 candidato.t_retorno = candidato.t_fin - candidato.arribo
+                candidato.t_espera = candidato.t_retorno - candidato.irrupcion
                 candidato.estado = "Finalizado"
                 liberar_particion(candidato, particiones)
 
